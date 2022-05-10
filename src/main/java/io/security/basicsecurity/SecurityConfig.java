@@ -2,6 +2,7 @@ package io.security.basicsecurity;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -9,8 +10,13 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -35,16 +41,32 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+
+//        http.csrf(); thymeleaf 또는 spring form 을 사용할때는 기본적으로 csrf 를 생성해서 보내준다.
         //인가 정책
         // * 주의 사항 - 설정 시 구체적인 경로가 먼저 오고 그것 보다 큰 범위의 경로가 뒤에 오도록 해야한다.
         http
                 .authorizeRequests()
+                .antMatchers("/login").permitAll()
                 .antMatchers("/user").hasRole("USER")
                 .antMatchers("/admin/pay").hasRole("ADMIN")
                 .antMatchers("/admin/**").access("hasRole('ADMIN') or hasRole('SYS')")
                 .anyRequest().authenticated();
         //인증 정책
         http.formLogin();
+//                .successHandler((request, response, authentication) -> {
+//                    RequestCache requestCache = new HttpSessionRequestCache();
+//                    SavedRequest savedRequest = requestCache.getRequest(request, response);
+//                    String redirectUrl = savedRequest.getRedirectUrl();
+//                    response.sendRedirect(redirectUrl);
+//                });
+//
+//        http
+//                .exceptionHandling()
+//                .authenticationEntryPoint((request, response, authException) -> response.sendRedirect("/login")) // 인증 에러 해들러
+//                .accessDeniedHandler((request, response, accessDeniedException) -> response.sendRedirect("/denied")); // 인가 에러 핸들러
+
+
 //                .loginPage("/loginPage")
 //                .defaultSuccessUrl("/")
 //                .failureUrl("/login")
